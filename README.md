@@ -45,14 +45,14 @@ El flujo completo recomendado es:
 
 ```mermaid
 flowchart TD
-    A[Aplicación PHP] --> B[fpdf-autofirma]
-    B -->|PDF + parámetros PAdES| C[Frontend web]
-    C --> D[@erseco/autofirma-client]
-    D --> E[AutoScript]
-    E --> F[AutoFirma]
-    F --> G[Certificado de la persona usuaria]
-    E -. cuando necesita transporte intermedio .-> H[autofirma-intermediate-server]
-    H -. almacenamiento y recuperación temporal .-> E
+    A["Aplicación PHP"] --> B["fpdf-autofirma"]
+    B -->|PDF + parámetros PAdES| C["Frontend web"]
+    C --> D["@erseco/autofirma-client"]
+    D --> E["AutoScript"]
+    E --> F["AutoFirma"]
+    F --> G["Certificado de la persona usuaria"]
+    E -.->|cuando necesita transporte intermedio| H["autofirma-intermediate-server"]
+    H -.->|almacenamiento y recuperación temporal| E
     F -->|PDF firmado| D
     D -->|resultado firmado| C
     C -->|guardar o validar| A
