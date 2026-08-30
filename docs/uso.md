@@ -15,10 +15,10 @@ El cliente JavaScript y el servidor intermedio no son dependencias Composer de e
 
 ```mermaid
 flowchart TD
-    PHP[PHP + fpdf-autofirma] -->|PDF + parámetros| JS[Frontend + autofirma-client]
-    JS --> AS[AutoScript]
-    AS --> AF[AutoFirma]
-    AS -. opcional .-> IS[Intermediate server]
+    PHP["PHP + fpdf-autofirma"] -->|PDF + parámetros| JS["Frontend + autofirma-client"]
+    JS --> AS["AutoScript"]
+    AS --> AF["AutoFirma"]
+    AS -.->|opcional| IS["Intermediate server"]
     AF -->|PDF firmado| JS
     JS -->|resultado| PHP
 ```
