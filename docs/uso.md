@@ -1,5 +1,28 @@
 # Uso e integración
 
+## Qué necesita cada parte
+
+`fpdf-autofirma` prepara el documento en PHP, pero **no ejecuta la firma**. Para completar una firma electrónica hay que integrar también una capa de navegador que invoque AutoScript y disponer de AutoFirma en el equipo de la persona usuaria.
+
+El conjunto recomendado es:
+
+1. `erseco/fpdf-autofirma` en PHP para generar el documento y los parámetros PAdES.
+2. [`@erseco/autofirma-client`](https://github.com/erseco/autofirma-client) en el frontend para invocar AutoScript/AutoFirma.
+3. AutoFirma instalada en el dispositivo que realiza la firma.
+4. [`erseco/autofirma-intermediate-server`](https://github.com/erseco/autofirma-intermediate-server) únicamente cuando AutoScript necesite transporte intermedio.
+
+El cliente JavaScript y el servidor intermedio no son dependencias Composer de este paquete.
+
+```mermaid
+flowchart TD
+    PHP[PHP + fpdf-autofirma] -->|PDF + parámetros| JS[Frontend + autofirma-client]
+    JS --> AS[AutoScript]
+    AS --> AF[AutoFirma]
+    AS -. opcional .-> IS[Intermediate server]
+    AF -->|PDF firmado| JS
+    JS -->|resultado| PHP
+```
+
 ## Crear un área de firma
 
 `FpdfAutoFirma` extiende la clase `FPDF`, por lo que conserva su API habitual. El recuadro de firma se define después de crear la página en la que debe aparecer:
@@ -66,9 +89,67 @@ Codificar y transportar el documento no forma parte del núcleo de esta librerí
 
 ## Firmar en el navegador
 
-La firma real debe ejecutarse en el navegador mediante AutoScript/AutoFirma. Con `@erseco/autofirma-client`, la aplicación consumidora puede usar los parámetros generados por esta librería como `parameters` de una operación PAdES.
+La integración recomendada es [`@erseco/autofirma-client`](https://github.com/erseco/autofirma-client):
 
-FPDF AutoFirma no incluye `autoscript.js` ni depende del paquete JavaScript. Esto mantiene el paquete PHP independiente del frontend elegido por cada aplicación.
+```bash
+npm install @erseco/autofirma-client
+```
+
+Consulta el README de ese proyecto para conocer el estado de sus versiones y la forma recomendada de servir la copia fijada de `autoscript.js`.
+
+Un flujo simplificado puede consumir directamente el Base64 y los parámetros generados en PHP:
+
+```ts
+import {
+  AutoFirmaClient,
+  loadAutoScript,
+} from "@erseco/autofirma-client";
+
+const response = await fetch("/document-to-sign");
+const payload = await response.json();
+
+const autoScript = await loadAutoScript("/vendor/autoscript.js");
+const client = new AutoFirmaClient({ autoScript });
+
+client.initialize();
+
+const result = await client.sign({
+  data: payload.data,
+  format: "PAdES",
+  parameters: {
+    mode: "implicit",
+    ...payload.parameters,
+  },
+});
+
+console.log(result.signature);
+```
+
+Las cadenas que recibe `@erseco/autofirma-client` se interpretan como Base64, por lo que el ejemplo anterior es compatible con `base64_encode($pdfData)`.
+
+El código de aplicación debe enviar después `result.signature` al backend si necesita almacenar o validar el PDF firmado.
+
+> [!NOTE]
+> `@erseco/autofirma-client` es la integración recomendada, pero no es técnicamente imprescindible para esta librería PHP. Una aplicación también puede integrar directamente la API oficial AutoScript y pasarle los mismos parámetros generados por `fpdf-autofirma`.
+
+## Servidor intermedio
+
+El servidor intermedio **no debe desplegarse por defecto**. Solo es necesario cuando AutoScript necesita las URLs de almacenamiento y recuperación que forman parte de su protocolo de transporte, especialmente en determinados escenarios móviles.
+
+Para esos casos puede utilizarse [`erseco/autofirma-intermediate-server`](https://github.com/erseco/autofirma-intermediate-server).
+
+El cliente se configura con las URLs que exponga la aplicación:
+
+```ts
+const client = new AutoFirmaClient({
+  storageUrl: "https://example.org/autofirma/storage",
+  retrieveUrl: "https://example.org/autofirma/retrieve",
+});
+```
+
+La forma exacta de generar esas URLs, protegerlas y asociarlas a una sesión pertenece a la aplicación consumidora. `fpdf-autofirma` no crea sesiones, tokens ni endpoints HTTP.
+
+El servidor intermedio tampoco firma ni valida documentos. Su responsabilidad es únicamente transportar temporalmente datos opacos entre AutoScript y AutoFirma.
 
 ## Varias áreas
 
@@ -104,3 +185,14 @@ La librería rechaza antes de generar parámetros:
 - intentos de añadir un recuadro antes de crear una página FPDF.
 
 Estas comprobaciones validan la geometría y la coherencia de los parámetros. No validan certificados ni firmas electrónicas.
+
+## Validación del resultado
+
+Que AutoFirma devuelva un PDF firmado no convierte al navegador en una frontera de confianza. Si la firma tiene consecuencias jurídicas, de identidad o de autorización, el backend debe validar de forma independiente:
+
+- la integridad de la firma;
+- el certificado firmante;
+- la cadena de confianza;
+- las fechas de validez;
+- la revocación cuando proceda;
+- cualquier política adicional requerida por la aplicación.
