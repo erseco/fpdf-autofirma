@@ -24,7 +24,11 @@ class FpdfAutoFirma extends \FPDF
         float $height,
         string $text
     ): void {
-        $page = (int) $this->PageNo();
+        $page = $this->PageNo();
+
+        if (!is_int($page)) {
+            throw new LogicException('FPDF returned an invalid page number.');
+        }
 
         if ($page < 1) {
             throw new LogicException('Add an FPDF page before defining a signature box.');
@@ -37,10 +41,13 @@ class FpdfAutoFirma extends \FPDF
             throw new DuplicateSignatureBox(sprintf('Signature box "%s" already exists.', $name));
         }
 
-        $pageHeight = (float) $this->GetPageHeight();
-        $box->assertFits((float) $this->GetPageWidth(), $pageHeight);
+        $pageWidth = $this->fpdfNumber($this->GetPageWidth(), 'page width');
+        $pageHeight = $this->fpdfNumber($this->GetPageHeight(), 'page height');
+        $pointsPerUnit = $this->fpdfNumber($this->k, 'scale');
 
-        $rectangle = (new CoordinateConverter())->convert($box, $pageHeight, (float) $this->k);
+        $box->assertFits($pageWidth, $pageHeight);
+
+        $rectangle = (new CoordinateConverter())->convert($box, $pageHeight, $pointsPerUnit);
         $this->signatureParameters[$name] = AutoFirmaParameters::fromVisibleSignature(
             $page,
             $rectangle,
@@ -87,5 +94,19 @@ class FpdfAutoFirma extends \FPDF
         }
 
         return $parameters;
+    }
+
+    /**
+     * Normalizes values returned by the untyped FPDF 1.x API.
+     *
+     * @param mixed $value
+     */
+    private function fpdfNumber($value, string $name): float
+    {
+        if (!is_int($value) && !is_float($value)) {
+            throw new LogicException(sprintf('FPDF returned an invalid %s.', $name));
+        }
+
+        return (float) $value;
     }
 }

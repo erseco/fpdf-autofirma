@@ -3,6 +3,4 @@ parameters:
   paths:
     - src
     - tests
-  stubFiles:
-    - stubs/fpdf.stub
   tmpDir: .phpstan-cache
