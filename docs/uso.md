@@ -18,7 +18,7 @@ flowchart TD
     PHP["PHP + fpdf-autofirma"] -->|PDF + parámetros| JS["Frontend + autofirma-client"]
     JS --> AS["AutoScript"]
     AS --> AF["AutoFirma"]
-    AS -.->|opcional| IS["Intermediate server"]
+    AS -. opcional .-> IS["Intermediate server"]
     AF -->|PDF firmado| JS
     JS -->|resultado| PHP
 ```
