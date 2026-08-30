@@ -24,6 +24,7 @@ La librería no firma en PHP, no valida firmas electrónicas, no implementa crip
 - `src/AutoFirmaParameters.php`: extra parameters oficiales para firma visible.
 - `src/Exception/`: errores específicos de la API pública.
 - `tests/Unit/`: pruebas unitarias y de integración fina con FPDF.
+- `stubs/fpdf.stub`: tipos conocidos de la API FPDF usados solo por PHPStan; no es código de producción.
 - `docs/`: uso, arquitectura, calidad y publicación.
 
 No dupliques responsabilidades de otros proyectos:
@@ -42,6 +43,12 @@ El núcleo debe seguir siendo independiente de WordPress, Symfony, Laravel y cua
 - Una caja se asocia a la página FPDF activa al registrarse.
 - Los nombres de caja son únicos dentro del documento.
 - Un cambio de nombres de métodos, claves devueltas, redondeo o sistema de coordenadas es un cambio observable y necesita tests y documentación.
+
+## Análisis estático y FPDF
+
+FPDF 1.x no declara tipos PHP en varios métodos y propiedades que esta librería necesita. `stubs/fpdf.stub` documenta únicamente las firmas conocidas usadas por el proyecto para que PHPStan pueda mantenerse en nivel máximo.
+
+No uses `ignoreErrors` para ocultar problemas derivados de FPDF si pueden describirse con un stub preciso. Mantén el stub limitado a miembros de FPDF que el código consuma realmente.
 
 ## Seguridad y límites
 

@@ -66,6 +66,7 @@
       "/.github",
       "/docs",
       "/scripts",
+      "/stubs",
       "/tests",
       "/.editorconfig",
       "/.gitattributes",
