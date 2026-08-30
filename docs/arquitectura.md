@@ -120,15 +120,19 @@ sequenceDiagram
     FPDF-->>PHP: PDF + parámetros PAdES
     PHP-->>JS: Entregar documento y parameters
     JS->>AS: sign(PAdES)
-    opt AutoScript necesita transporte intermedio
-        AS->>IS: put(datos opacos)
-        AF->>IS: get(datos opacos)
+
+    alt Comunicación directa
+        AS->>AF: Invocar operación de firma
+        AF-->>AS: PDF firmado
+    else Transporte intermedio requerido
+        AS->>IS: put(solicitud opaca)
+        AS->>AF: Invocar AutoFirma con referencia temporal
+        AF->>IS: get(solicitud opaca)
         AF->>IS: put(resultado opaco)
         AS->>IS: get(resultado opaco)
     end
-    AS->>AF: Abrir operación de firma
-    AF-->>AS: PDF firmado
-    AS-->>JS: Resultado
+
+    AS-->>JS: Resultado de firma
     JS-->>PHP: Aplicación envía el PDF firmado
 ```
 
