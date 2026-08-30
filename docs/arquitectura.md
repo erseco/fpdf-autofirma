@@ -49,22 +49,22 @@ El resultado se redondea al punto PDF más cercano. La geometría se valida ante
 
 ```mermaid
 flowchart LR
-    subgraph Backend[Backend PHP]
-        APP[Aplicación]
-        FPDF[fpdf-autofirma]
+    subgraph Backend["Backend PHP"]
+        APP["Aplicación"]
+        FPDF["fpdf-autofirma"]
         APP --> FPDF
     end
 
-    subgraph Browser[Navegador]
-        FRONT[Frontend]
-        CLIENT[@erseco/autofirma-client]
-        SCRIPT[AutoScript]
+    subgraph Browser["Navegador"]
+        FRONT["Frontend"]
+        CLIENT["@erseco/autofirma-client"]
+        SCRIPT["AutoScript"]
         FRONT --> CLIENT --> SCRIPT
     end
 
-    subgraph UserDevice[Equipo de la persona usuaria]
-        AF[AutoFirma]
-        CERT[Certificado]
+    subgraph UserDevice["Equipo de la persona usuaria"]
+        AF["AutoFirma"]
+        CERT["Certificado"]
         AF --> CERT
     end
 
@@ -72,10 +72,10 @@ flowchart LR
     SCRIPT --> AF
     AF -->|PDF firmado| SCRIPT
     CLIENT -->|resultado| FRONT
-    FRONT -->|guardar / validar| APP
+    FRONT -->|guardar o validar| APP
 
-    SCRIPT -. transporte opcional .-> SERVER[autofirma-intermediate-server]
-    SERVER -. datos temporales opacos .-> SCRIPT
+    SCRIPT -.->|transporte opcional| SERVER["autofirma-intermediate-server"]
+    SERVER -.->|datos temporales opacos| SCRIPT
 ```
 
 ### Responsabilidad de cada proyecto
@@ -111,25 +111,25 @@ No debe configurarse por defecto ni tratarse como un repositorio documental. El 
 sequenceDiagram
     participant PHP as Aplicación PHP
     participant FPDF as fpdf-autofirma
-    participant JS as autofirma-client
+    participant JS as AutoFirma Client
     participant AS as AutoScript
-    participant IS as Intermediate server
+    participant IS as Intermediate Server
     participant AF as AutoFirma
 
-    PHP->>FPDF: Crear PDF y addSignatureBox()
+    PHP->>FPDF: Crear PDF y área de firma
     FPDF-->>PHP: PDF + parámetros PAdES
-    PHP-->>JS: Entregar documento y parameters
-    JS->>AS: sign(PAdES)
+    PHP-->>JS: Entregar documento y parámetros
+    JS->>AS: Iniciar firma PAdES
 
     alt Comunicación directa
         AS->>AF: Invocar operación de firma
         AF-->>AS: PDF firmado
     else Transporte intermedio requerido
-        AS->>IS: put(solicitud opaca)
+        AS->>IS: Guardar solicitud opaca
         AS->>AF: Invocar AutoFirma con referencia temporal
-        AF->>IS: get(solicitud opaca)
-        AF->>IS: put(resultado opaco)
-        AS->>IS: get(resultado opaco)
+        AF->>IS: Recuperar solicitud opaca
+        AF->>IS: Guardar resultado opaco
+        AS->>IS: Recuperar resultado opaco
     end
 
     AS-->>JS: Resultado de firma
