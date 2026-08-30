@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+          extensions: gd, zlib
+          tools: composer:v2
+      - name: Verify SemVer tag
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must use vX.Y.Z format" >&2
+            exit 1
+          fi
+      - run: make install
+      - run: make check
+      - name: Build release archive from tag version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          make dist VERSION="${VERSION}"
+      - name: Verify release archive
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCHIVE="artifacts/fpdf-autofirma-${VERSION}.zip"
+          test -f "${ARCHIVE}"
+          unzip -l "${ARCHIVE}" | grep -q "composer.json"
+          if unzip -l "${ARCHIVE}" | grep -qE '(^|/)(\.github|tests|AGENTS\.md|Makefile)(/|$)'; then
+            echo "Release archive contains development-only files" >&2
+            exit 1
+          fi
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" artifacts/*.zip --generate-notes

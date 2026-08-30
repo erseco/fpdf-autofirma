@@ -1,0 +1,57 @@
+{
+  "name": "erseco/fpdf-autofirma",
+  "description": "FPDF extension providing AutoFirma integration, visible PAdES signature areas and signing parameters for browser-based electronic signatures",
+  "keywords": [
+    "autofirma",
+    "electronic-signature",
+    "fpdf",
+    "pades",
+    "pdf",
+    "spain"
+  ],
+  "homepage": "https://github.com/erseco/fpdf-autofirma",
+  "license": "MIT",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Ernesto Serrano",
+      "homepage": "https://github.com/erseco"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/erseco/fpdf-autofirma/issues",
+    "source": "https://github.com/erseco/fpdf-autofirma"
+  },
+  "require": {
+    "php": ">=7.4",
+    "setasign/fpdf": "^1.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "Erseco\\FpdfAutoFirma\\": "src/"
+    }
+  },
+  "scripts": {
+    "check": [
+      "@validate",
+      "@audit"
+    ],
+    "validate": "composer validate --strict --no-check-lock",
+    "audit": "composer audit"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "archive": {
+    "exclude": [
+      "/.agents",
+      "/.claude",
+      "/.github",
+      "/docs",
+      "/tests",
+      "/AGENTS.md",
+      "/CONTRIBUTING.md",
+      "/Makefile"
+    ]
+  }
+}
