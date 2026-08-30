@@ -39,7 +39,8 @@ jobs:
           ARCHIVE="artifacts/fpdf-autofirma-${VERSION}.zip"
           test -f "${ARCHIVE}"
           unzip -l "${ARCHIVE}" | grep -q "composer.json"
-          if unzip -l "${ARCHIVE}" | grep -qE '(^|/)(\.github|tests|AGENTS\.md|Makefile)(/|$)'; then
+          unzip -l "${ARCHIVE}" | grep -q "src/FpdfAutoFirma.php"
+          if unzip -l "${ARCHIVE}" | grep -qE '(^|/)(\.github|docs|scripts|tests|AGENTS\.md|Makefile)(/|$)'; then
             echo "Release archive contains development-only files" >&2
             exit 1
           fi

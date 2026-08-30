@@ -1,4 +1,4 @@
-.PHONY: audit check dist install validate
+.PHONY: analyse audit check coverage dist fix install lint test validate
 
 install:
 	composer install --no-interaction --prefer-dist
@@ -6,10 +6,25 @@ install:
 validate:
 	composer validate --strict --no-check-lock
 
+lint:
+	composer lint
+
+fix:
+	composer fix
+
+analyse:
+	composer analyse
+
+test:
+	composer test
+
+coverage:
+	composer coverage
+
 audit:
 	composer audit
 
-check: validate audit
+check: validate lint analyse test audit
 
 dist:
 	@test -n "$(VERSION)" || (echo "VERSION is required" >&2; exit 1)

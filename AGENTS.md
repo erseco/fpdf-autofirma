@@ -2,7 +2,7 @@
 
 ## Finalidad
 
-Este repositorio implementará una extensión de FPDF para preparar documentos PDF destinados a firma PAdES con AutoFirma desde el navegador.
+Este repositorio implementa una extensión de FPDF para preparar documentos PDF destinados a firma PAdES con AutoFirma desde el navegador.
 
 La librería no firma en PHP, no valida firmas electrónicas, no implementa criptografía, no incluye AutoFirma ni AutoScript y no debe presentarse como sustituto de una validación de firma en servidor.
 
@@ -12,17 +12,19 @@ La librería no firma en PHP, no valida firmas electrónicas, no implementa crip
 - README, documentación, ADR, plantillas y explicaciones para personas en español.
 - Conserva los nombres oficiales de parámetros de AutoFirma/AutoScript aunque no sigan el estilo del proyecto.
 - PHP con cuatro espacios, `declare(strict_types=1)` y PSR-12.
-- JSON, YAML y Markdown con dos espacios.
+- JSON, YAML, Markdown y NEON con dos espacios.
 - Mantén compatibilidad con PHP 7.4 salvo que una decisión de arquitectura documentada eleve expresamente el mínimo.
 
 ## Arquitectura
 
-La responsabilidad del proyecto debe limitarse a la integración específica con FPDF:
-
-- representar áreas de firma visible en coordenadas y unidades de FPDF;
-- convertirlas al sistema de coordenadas y unidades esperado por PDF/AutoFirma;
-- construir los parámetros PAdES necesarios para la firma visible;
-- exponer el PDF y los parámetros de forma que una capa de navegador pueda firmarlos.
+- `src/FpdfAutoFirma.php`: fachada pública que extiende `FPDF`.
+- `src/SignatureBox.php`: geometría y texto en coordenadas FPDF.
+- `src/CoordinateConverter.php`: conversión pura de FPDF a PDF.
+- `src/PdfRectangle.php`: rectángulo final en puntos PDF.
+- `src/AutoFirmaParameters.php`: extra parameters oficiales para firma visible.
+- `src/Exception/`: errores específicos de la API pública.
+- `tests/Unit/`: pruebas unitarias y de integración fina con FPDF.
+- `docs/`: uso, arquitectura, calidad y publicación.
 
 No dupliques responsabilidades de otros proyectos:
 
@@ -35,10 +37,11 @@ El núcleo debe seguir siendo independiente de WordPress, Symfony, Laravel y cua
 ## API pública
 
 - Evita métodos que sugieran falsamente que PHP ejecuta la firma, por ejemplo `sign()` o `signPdf()` si en realidad solo preparan datos.
-- Prefiere nombres que expresen preparación, parámetros o áreas de firma.
-- La conversión de coordenadas debe ser determinista y estar cubierta por pruebas antes de considerarse estable.
-- No expongas detalles internos innecesarios de FPDF si pueden encapsularse.
-- Mantén compatibilidad con `setasign/fpdf` y documenta cualquier dependencia de una versión concreta.
+- Las áreas de firma se expresan en el sistema de coordenadas y la unidad de FPDF.
+- La conversión a PDF usa puntos y origen inferior izquierdo.
+- Una caja se asocia a la página FPDF activa al registrarse.
+- Los nombres de caja son únicos dentro del documento.
+- Un cambio de nombres de métodos, claves devueltas, redondeo o sistema de coordenadas es un cambio observable y necesita tests y documentación.
 
 ## Seguridad y límites
 
@@ -55,9 +58,14 @@ Antes de publicar cambios ejecuta:
 ```bash
 make install
 make check
+make coverage
 ```
 
-Mientras el repositorio solo contiene infraestructura, `make check` valida Composer y audita dependencias. Antes de publicar la primera versión funcional debe incluir como mínimo pruebas unitarias de conversión de coordenadas y generación de parámetros, estilo y análisis estático.
+`make check` valida Composer, PSR-12, PHPStan al nivel máximo, PHPUnit y auditoría. `make coverage` genera Clover y falla si la cobertura de sentencias baja del 90 %.
+
+Todo cambio observable necesita pruebas. La conversión de coordenadas, límites de página, páginas múltiples, nombres duplicados y parámetros oficiales deben permanecer cubiertos.
+
+La matriz de CI cubre PHP 7.4, 8.1, 8.4 y 8.5. La cobertura se calcula una vez con PCOV y se publica en Codecov mediante OIDC.
 
 ## Releases
 
@@ -68,7 +76,10 @@ Mientras el repositorio solo contiene infraestructura, `make check` valida Compo
 - Una versión publicada no se modifica ni se reutiliza.
 - El tag lo crea una persona, nunca un agente.
 - Packagist obtiene las versiones de los tags mediante su integración con GitHub.
-- No publiques una versión estable hasta que la API pública, las pruebas y los ejemplos funcionales estén preparados.
+
+## Documentación
+
+Actualiza `README.md` y el documento correspondiente de `docs/` cuando cambie la API o un comportamiento observable. Mantén los ejemplos ejecutables y no documentes capacidades que el código no implemente.
 
 ## Licencia
 

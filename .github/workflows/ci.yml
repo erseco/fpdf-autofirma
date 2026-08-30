@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  composer:
+  php:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
     strategy:
@@ -25,4 +25,32 @@ jobs:
           extensions: gd, zlib
           tools: composer:v2
       - run: make install
-      - run: make check
+      - run: make validate
+      - run: make lint
+      - run: make analyse
+      - run: make test
+      - run: make audit
+
+  coverage:
+    name: Cobertura >= 90%
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: pcov
+          extensions: gd, zlib
+          tools: composer:v2
+      - run: make install
+      - run: make coverage
+      - name: Publicar en Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: ./coverage.xml
+          flags: php
+          fail_ci_if_error: true

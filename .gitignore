@@ -1,5 +1,7 @@
 /artifacts/
 /composer.lock
+/coverage/
+/coverage.xml
 /vendor/
 /.phpstan-cache/
 /.phpunit.cache/

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="FPDF AutoFirma">
+    <description>PSR-12 rules for the FPDF AutoFirma library.</description>
+
+    <file>src</file>
+    <file>tests</file>
+    <file>scripts</file>
+
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+    <arg value="p"/>
+
+    <rule ref="PSR12"/>
+</ruleset>
