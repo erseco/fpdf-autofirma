@@ -74,8 +74,8 @@ flowchart LR
     CLIENT -->|resultado| FRONT
     FRONT -->|guardar o validar| APP
 
-    SCRIPT -.->|transporte opcional| SERVER["autofirma-intermediate-server"]
-    SERVER -.->|datos temporales opacos| SCRIPT
+    SCRIPT -. transporte opcional .-> SERVER["autofirma-intermediate-server"]
+    SERVER -. datos temporales opacos .-> SCRIPT
 ```
 
 ### Responsabilidad de cada proyecto
