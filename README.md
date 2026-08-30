@@ -11,7 +11,7 @@ Extension for the FPDF class ([www.fpdf.org](https://www.fpdf.org/)) providing A
 **Author:** [@erseco](https://github.com/erseco)  
 **License:** MIT License — same as FPDF.
 
-Integración de FPDF con AutoFirma para definir áreas de firma visible en coordenadas de FPDF y obtener los parámetros PAdES que AutoScript necesita para firmar el documento desde el navegador.
+Integración de FPDF con AutoFirma para definir áreas de firma PAdES visibles y preparar los parámetros necesarios para firmar documentos desde el navegador mediante AutoScript.
 
 > [!IMPORTANT]
 > Este proyecto es independiente y no oficial. No pertenece al Gobierno de España, no incluye AutoFirma ni AutoScript, no firma en PHP y no valida firmas electrónicas.
@@ -23,6 +23,42 @@ Cuando el paquete esté publicado en Packagist:
 ```bash
 composer require erseco/fpdf-autofirma
 ```
+
+Composer instalará automáticamente `setasign/fpdf`.
+
+## Requisitos e integración
+
+FPDF AutoFirma se ocupa exclusivamente de generar el PDF y preparar los parámetros de una firma PAdES visible. La firma real se ejecuta fuera de PHP, en el navegador y en el equipo de la persona usuaria.
+
+| Componente | ¿Cuándo hace falta? | Responsabilidad |
+| --- | --- | --- |
+| `erseco/fpdf-autofirma` | Siempre | Generar el PDF, definir el área visible y producir parámetros PAdES. |
+| [AutoFirma](https://firmaelectronica.gob.es/Home/Descargas.html) | Para realizar la firma | Acceder al certificado de la persona usuaria y ejecutar la firma electrónica. |
+| [`@erseco/autofirma-client`](https://github.com/erseco/autofirma-client) | Recomendado para la integración web | Invocar AutoScript/AutoFirma desde JavaScript o TypeScript y normalizar la operación de firma. |
+| [`erseco/autofirma-intermediate-server`](https://github.com/erseco/autofirma-intermediate-server) | Solo cuando AutoScript necesita transporte intermedio | Almacenar y recuperar temporalmente los datos opacos intercambiados con AutoFirma, especialmente en determinados flujos móviles. |
+
+`@erseco/autofirma-client` no es una dependencia Composer de esta librería porque se ejecuta en el navegador. Una aplicación puede integrar directamente el AutoScript oficial si lo prefiere, aunque el cliente de `@erseco` es la integración recomendada para los proyectos de este ecosistema.
+
+El servidor intermedio **no es obligatorio en todos los despliegues** y tampoco es una dependencia de `fpdf-autofirma`. Debe configurarse únicamente cuando el flujo de AutoScript utilizado requiera sus URLs de almacenamiento y recuperación.
+
+El flujo completo recomendado es:
+
+```mermaid
+flowchart TD
+    A[Aplicación PHP] --> B[fpdf-autofirma]
+    B -->|PDF + parámetros PAdES| C[Frontend web]
+    C --> D[@erseco/autofirma-client]
+    D --> E[AutoScript]
+    E --> F[AutoFirma]
+    F --> G[Certificado de la persona usuaria]
+    E -. cuando necesita transporte intermedio .-> H[autofirma-intermediate-server]
+    H -. almacenamiento y recuperación temporal .-> E
+    F -->|PDF firmado| D
+    D -->|resultado firmado| C
+    C -->|guardar o validar| A
+```
+
+La aplicación que recibe el PDF firmado sigue siendo responsable de almacenarlo y, cuando el resultado tenga consecuencias jurídicas o de autorización, de validar criptográficamente la firma, el certificado, la cadena de confianza y el estado de revocación.
 
 ## Uso básico
 
@@ -68,7 +104,7 @@ $pdfData = $pdf->Output('S');
 
 Los valores exactos dependen del tamaño de página y de la unidad configurada en FPDF. La librería convierte automáticamente el origen superior izquierdo de FPDF al origen inferior izquierdo usado por PDF/AutoFirma y convierte las unidades de FPDF a puntos PDF.
 
-El PDF y esos parámetros deben entregarse después a la capa de navegador que invoque AutoScript. Para ese trabajo existe [`@erseco/autofirma-client`](https://github.com/erseco/autofirma-client).
+El PDF y esos parámetros deben entregarse después a la capa de navegador que invoque AutoScript. Para esa integración se recomienda [`@erseco/autofirma-client`](https://github.com/erseco/autofirma-client).
 
 ## Varias firmas
 
