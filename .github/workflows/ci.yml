@@ -52,5 +52,6 @@ jobs:
         with:
           use_oidc: true
           files: ./coverage.xml
+          disable_search: true
           flags: php
           fail_ci_if_error: true
