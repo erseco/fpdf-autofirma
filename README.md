@@ -51,8 +51,8 @@ flowchart TD
     D --> E["AutoScript"]
     E --> F["AutoFirma"]
     F --> G["Certificado de la persona usuaria"]
-    E -.->|cuando necesita transporte intermedio| H["autofirma-intermediate-server"]
-    H -.->|almacenamiento y recuperación temporal| E
+    E -. transporte intermedio opcional .-> H["autofirma-intermediate-server"]
+    H -. datos temporales opacos .-> E
     F -->|PDF firmado| D
     D -->|resultado firmado| C
     C -->|guardar o validar| A
